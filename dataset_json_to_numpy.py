@@ -1,5 +1,4 @@
 import json
-import pandas as pd
 import numpy as np
 import einops
 from pathlib import Path

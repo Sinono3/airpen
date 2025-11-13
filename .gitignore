@@ -3,3 +3,5 @@
 /dataset_json
 __pycache__
 *.npz
+.cache/
+.DS_Store

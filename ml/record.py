@@ -4,8 +4,9 @@ import torch
 import einops
 from tqdm import tqdm
 
-SERIAL_DATA_CMD = ["cat", "../test.csv"]
-# SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet"]
+SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet"]
+# DEBUG:
+# SERIAL_DATA_CMD = ["cat", "../test.csv"]
 
 # returns list of lines
 def run_command_until_n_lines(command, n_lines) -> list[str] :

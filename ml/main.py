@@ -9,6 +9,7 @@ from test import test
 from dataclasses import dataclass
 from typing import Optional
 import record
+import processing
 
 @dataclass
 class TrainConfig:
@@ -86,9 +87,11 @@ def main(cfg: DictConfig):
             record.countdown("recording", 3)
             x = record.record(132, device)
             # Remove gyro channels, as we don't use them
-            x = x[:, :, :3]
+            x = x[:3, :]
             # Apply smoothing before sending to model
-            x = 
+            x = processing.process_raw(x)
+            # add batch dim
+            x = x.unsqueeze(dim=0)
             
             y = model(x)
             y_prob = F.softmax(y, dim=-1)
