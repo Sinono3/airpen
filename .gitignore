@@ -1,0 +1,5 @@
+.pio
+/air-writing-export
+/dataset_json
+__pycache__
+*.npz
