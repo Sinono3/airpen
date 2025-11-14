@@ -6,10 +6,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection, Path3DCollection
 from scipy.signal import butter, filtfilt
 
-labels = ['A', 'B', 'C', 'D', 'E', 'F']
+labels = ['A', 'B', 'C', 'D']
 
 # Load data
-data = np.load("ABCDEF.npz")
+data = np.load("data/ABCDEF.npz")
 full = []
 classes = []
 

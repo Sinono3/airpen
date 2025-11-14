@@ -1,8 +1,12 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-data = dict(np.load("ABCDEF.npz"))
-labels = ['A', 'B', 'C', 'D']
+IN  = "data/ABCDEF.npz"
+OUT = "data/ABCDEF_smoothed.npz"
+
+data = dict(np.load(IN))
+# Classes to use
+labels = ['A', 'B', 'C', 'D', 'E', 'F']
 
 def lowpass_filter(data, cutoff, fs, order=4):
     b, a = butter(order, cutoff / (0.5 * fs), btype='low')
@@ -12,9 +16,9 @@ def lowpass_filter(data, cutoff, fs, order=4):
 print(f"all labels:  {list(data.keys())}")
 print(f"used labels: {labels}")
 
-for letter in data:
-    # only accelero
-    data[letter] = data[letter][:, :, :3]
-    data[letter] = lowpass_filter(data[letter], cutoff=5, fs=50)
+for label in labels:
+    # only accelerometer data
+    data[label] = data[label][:, :, :3]
+    data[label] = lowpass_filter(data[label], cutoff=5, fs=50)
 
-np.savez("ABCD_smoothed.npz", **data)
+np.savez(OUT, **data)
