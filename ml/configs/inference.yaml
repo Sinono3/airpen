@@ -1,0 +1,3 @@
+model:
+  num_classes: 4
+  weights: "ml/best_model.pth"

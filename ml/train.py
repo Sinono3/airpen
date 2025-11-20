@@ -1,8 +1,18 @@
+from dataclasses import dataclass
+from pathlib import Path
+
+import hydra
+import net
 import torch
 import torch.nn as nn
+import utils
+from dataset import create_dataloaders
+from hydra.core.config_store import ConfigStore
+from net import Model, ModelConfig
+from test import test
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from net import Model
+
 
 def train_epoch(model: Model, loader: DataLoader, criterion, optimizer, device):
     """Train for one epoch and return average loss and accuracy"""
@@ -107,3 +117,51 @@ def train_model(model, train_loader, val_loader, num_epochs=50, lr=0.001, device
     print(f"\nTraining completed! Best validation accuracy: {best_val_acc:.2f}%")
     
     return model, history
+
+@dataclass
+class TrainConfig:
+    model: ModelConfig
+    dataset: Path
+
+cs = ConfigStore.instance()
+cs.store(group="model", name="base", node=ModelConfig)
+cs.store(name="train", node=TrainConfig)
+    
+@hydra.main(config_path="./configs/", config_name="train", version_base=None)
+def main(cfg: TrainConfig):
+    LABELS = ['A', 'B', 'C', 'D', 'E', 'F']
+    LABELS = LABELS[:cfg.model.num_classes]
+    device = utils.prepare_device()
+    model = net.load_model(cfg.model, device)
+
+    train_loader, val_loader, test_loader = create_dataloaders(
+        cfg.dataset,
+        batch_size=128,
+        val_ratio=0.10,
+        test_ratio=0.20,
+        seed=42,
+    )
+
+    model, history = train_model(
+        model,
+        train_loader,
+        val_loader,
+        num_epochs=50,
+        lr=0.001,
+        device=device,
+    )
+
+    print("\nRunning final test on test set...")
+    test_acc, test_preds, test_labels = test(
+        model, test_loader, device, num_classes=cfg.model.num_classes
+    )
+    # Save model
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'history': history,
+        'test_accuracy': test_acc
+    }, 'best_model.pth')
+    print("Model saved to 'best_model.pth'")
+
+if __name__ == "__main__":
+    main()

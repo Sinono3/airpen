@@ -1,4 +1,11 @@
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
+
+import torch
 import torch.nn as nn
+from hydra.core.config_store import ConfigStore
+
 
 class Model(nn.Module):
     def __init__(self, num_classes):
@@ -22,3 +29,22 @@ class Model(nn.Module):
     
     def forward(self, x):
         return self.net(x)
+
+@dataclass
+class ModelConfig:
+    num_classes: int
+    weights: Path
+
+cs = ConfigStore.instance()
+cs.store(group="model", name="base", node=ModelConfig)
+
+def load_model(cfg: ModelConfig, device: torch.device | str) -> Model:
+    model = Model(num_classes=cfg.num_classes)
+    model.to(device)
+
+    if cfg.weights is not None:
+        print(f"Loading model from {cfg.weights}")
+        best_model = torch.load(cfg.weights, map_location=device)
+        model.load_state_dict(best_model['model_state_dict'])
+
+    return model
