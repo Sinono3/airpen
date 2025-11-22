@@ -22,7 +22,7 @@ def test(model, loader, device, num_classes=4):
     
     with torch.no_grad():
         for x, y in tqdm(loader, desc="Testing", leave=False):
-            x = x.transpose(1, 2).to(device)  # (B, 3, 132)
+            x = x.to(device)  # (B, 3, 132)
             y = y.to(device)
             
             outputs = model(x)

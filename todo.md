@@ -1,0 +1,9 @@
+- [x] Finish analyze outliers
+- [x] "Fix outlier's orientation" pure function
+- [x] Normalize dataset i.e. (x - mean)/std
+  - This is a smoother alternative to the set min=-1, max=1 for every input.
+- [ ] "Pen roll rotate" pure function
+- [ ] Data augmentation wiht pen roll rotation implementation
+- [ ] proper logging with `logging+hydra`
+- [ ] proper stats with `aim+hydra`
+- [ ] incompatible pair finder script

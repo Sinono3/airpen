@@ -1,4 +1,4 @@
-dataset: "./data/ABCD_smoothed.npz"
 model:
   num_classes: 4
   weights: "ml/best_model.pth"
+dataset: "./data/ABCD_smoothed.npz"

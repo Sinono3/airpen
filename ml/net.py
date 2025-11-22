@@ -33,7 +33,7 @@ class Model(nn.Module):
 @dataclass
 class ModelConfig:
     num_classes: int
-    weights: Path
+    weights: Optional[Path]
 
 cs = ConfigStore.instance()
 cs.store(group="model", name="base", node=ModelConfig)

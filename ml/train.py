@@ -22,7 +22,7 @@ def train_epoch(model: Model, loader: DataLoader, criterion, optimizer, device):
     total = 0
     
     for x, y in tqdm(loader, desc="Training", leave=False):
-        x = x.transpose(1, 2).to(device)  # (B, 3, 132)
+        x = x.to(device)  # (B, 3, 132)
         y = y.to(device)
         
         optimizer.zero_grad()
@@ -49,7 +49,7 @@ def validate(model, loader, criterion, device):
     
     with torch.no_grad():
         for x, y in tqdm(loader, desc="Validation", leave=False):
-            x = x.transpose(1, 2).to(device)  # (B, 3, 132)
+            x = x.to(device)  # (B, 3, 132)
             y = y.to(device)
             
             outputs = model(x)
