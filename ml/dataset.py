@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 
 class AccelGyroDataset(Dataset):
-    def __init__(self, npz_path, used_labels=['A', 'B', 'C', 'D'], normalize=True, ignore_gyro=True):
+    def __init__(self, npz_path, used_labels=['A', 'B', 'C', 'D', 'E', 'F'], normalize=True, ignore_y=True, ignore_gyro=True):
         data = np.load(npz_path)
         self.samples = []
         self.labels = []
@@ -25,9 +25,14 @@ class AccelGyroDataset(Dataset):
         # If ignore_gyro==True, only use the first three values, corresponding to accelerometer
         slice_idx = 3 if ignore_gyro else 6
         self.samples = self.samples[:, :slice_idx, :]
+        # If ignore_y==True, only use X and Z
+        slice_idx = [0, 2] if ignore_y else [0, 1, 2]
+        self.samples = self.samples[:, slice_idx, :]
 
         # Normalize by mean and stddev
         if normalize:
+            print(f"{self.samples.mean(dim=(0, 2), keepdim=True)}")
+            print(f"{self.samples.std(dim=(0,2), keepdim=True)}")
             self.samples = (self.samples - self.samples.mean(dim=(0, 2), keepdim=True)) / self.samples.std(dim=(0,2), keepdim=True)
     
     def __len__(self):

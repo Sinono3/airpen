@@ -1,3 +1,4 @@
 model:
+  in_channels: 2
   num_classes: 4
-  weights: "ml/best_model.pth"
+  weights: best_model.pth

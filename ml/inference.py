@@ -32,10 +32,17 @@ def main(cfg: InferenceConfig):
 
         # Remove gyro channels, as we don't use them
         x = x[:3, :]
+        # remove Y
+        x = x[[0,2], :]
         # Apply smoothing before sending to model
         x = processing.process_raw(x)
         # add batch dim
         x = x.unsqueeze(dim=0)
+
+        # normalize
+        mean = torch.tensor([[[ 0.1631], [-0.3603]]], dtype=torch.float32, device=device)
+        std = torch.tensor([[[2.6194], [2.6409]]], dtype=torch.float32, device=device)
+        x = (x - mean) / std
         
         with torch.no_grad():
             y = model(x)

@@ -146,7 +146,7 @@ def main(cfg: TrainConfig):
         model,
         train_loader,
         val_loader,
-        num_epochs=50,
+        num_epochs=7,
         lr=0.001,
         device=device,
     )

@@ -8,10 +8,10 @@ from hydra.core.config_store import ConfigStore
 
 
 class Model(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, in_channels, num_classes):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Conv1d(3, 32, kernel_size=5, stride=1, padding=2),
+            nn.Conv1d(in_channels, 32, kernel_size=5, stride=1, padding=2),
             nn.BatchNorm1d(32),
             nn.ReLU(),
             nn.MaxPool1d(2),  # -> (B, 32, 66)
@@ -32,6 +32,7 @@ class Model(nn.Module):
 
 @dataclass
 class ModelConfig:
+    in_channels: int
     num_classes: int
     weights: Optional[Path]
 
@@ -39,7 +40,7 @@ cs = ConfigStore.instance()
 cs.store(group="model", name="base", node=ModelConfig)
 
 def load_model(cfg: ModelConfig, device: torch.device | str) -> Model:
-    model = Model(num_classes=cfg.num_classes)
+    model = Model(in_channels=cfg.in_channels, num_classes=cfg.num_classes)
     model.to(device)
 
     if cfg.weights is not None:
