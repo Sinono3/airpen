@@ -122,6 +122,10 @@ def train_model(model, train_loader, val_loader, num_epochs=50, lr=0.001, device
 class TrainConfig:
     model: ModelConfig
     dataset: Path
+    batch_size: int
+    num_epochs: int
+    lr: float
+    seed: int
 
 cs = ConfigStore.instance()
 cs.store(group="model", name="base", node=ModelConfig)
@@ -136,18 +140,18 @@ def main(cfg: TrainConfig):
 
     train_loader, val_loader, test_loader = create_dataloaders(
         cfg.dataset,
-        batch_size=128,
+        batch_size=cfg.batch_size,
         val_ratio=0.10,
         test_ratio=0.20,
-        seed=42,
+        seed=cfg.seed,
     )
 
     model, history = train_model(
         model,
         train_loader,
         val_loader,
-        num_epochs=7,
-        lr=0.001,
+        num_epochs=cfg.num_epochs,
+        lr=cfg.lr,
         device=device,
     )
 

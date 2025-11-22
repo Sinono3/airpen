@@ -40,9 +40,9 @@ def main(cfg: InferenceConfig):
         x = x.unsqueeze(dim=0)
 
         # normalize
-        mean = torch.tensor([[[ 0.1631], [-0.3603]]], dtype=torch.float32, device=device)
-        std = torch.tensor([[[2.6194], [2.6409]]], dtype=torch.float32, device=device)
-        x = (x - mean) / std
+        mean = torch.tensor([ 0.0998, -0.3096], dtype=torch.float32, device=device)
+        std = torch.tensor([2.5833, 2.4993], dtype=torch.float32, device=device)
+        x = (x - mean[None, :, None]) / std[None, :, None]
         
         with torch.no_grad():
             y = model(x)

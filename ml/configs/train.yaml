@@ -3,3 +3,7 @@ model:
   num_classes: 4
   weights:
 dataset: "./data/ABCD_final.npz"
+batch_size: 512
+num_epochs: 7
+lr: 0.001
+seed: 42

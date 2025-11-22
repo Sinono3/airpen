@@ -4,6 +4,17 @@
   - This is a smoother alternative to the set min=-1, max=1 for every input.
 - [x] Discard vertical (Y) dimension
 - [x] Data augmentation with pen roll rotation implementation
-- [ ] Actually save best model
-- [ ] proper logging with `aim+logging+hydra`
+- [x] Correct normalization procedure
+- [ ] extract dataset mean/std on preprocessing, and save into npz
+- [ ] Proper logging with `aim+logging+hydra`
+- [ ] Save everything in the corresponding Hydra run dir
+- [ ] Actually save best model, not last model
+- [ ] Set dataset args (used labels, normalize) in config, not hardcoded
+- [ ] Separate train/test/split logic from dataloader. Fix broken test script.
+- [ ] Maybe separate augmentation logic from preprocessing, and embed directly in `training`?
+- [ ] Scale/time translation data augmentation
+  - may need to scale acceleration too. Need to observe this phenomenon manually first.
+  - to observe it: record one slow A, a faster A, and so on, each time faster, until it's really fast.
+  - the time scale be faster, and the acceleration should be greater.
+  - we should try to replicate this in the scaling augmentation.
 - [ ] incompatible pair finder script

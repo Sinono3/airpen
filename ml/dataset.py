@@ -3,7 +3,15 @@ import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 
 class AccelGyroDataset(Dataset):
-    def __init__(self, npz_path, used_labels=['A', 'B', 'C', 'D', 'E', 'F'], normalize=True, ignore_y=True, ignore_gyro=True):
+    def __init__(
+        self,
+        npz_path,
+        used_labels=["A", "B", "C", "D", "E", "F"],
+        normalize_dataset=True,
+        normalize_sample=True,
+        ignore_y=True,
+        ignore_gyro=True,
+    ):
         data = np.load(npz_path)
         self.samples = []
         self.labels = []
@@ -29,11 +37,15 @@ class AccelGyroDataset(Dataset):
         slice_idx = [0, 2] if ignore_y else [0, 1, 2]
         self.samples = self.samples[:, slice_idx, :]
 
-        # Normalize by mean and stddev
-        if normalize:
-            print(f"{self.samples.mean(dim=(0, 2), keepdim=True)}")
-            print(f"{self.samples.std(dim=(0,2), keepdim=True)}")
+        # Normalize each sample by dataset mean and stddev
+        if normalize_dataset:
+            print(f"Dataset mean: {self.samples.mean(dim=(0, 2))}")
+            print(f"Dataset std:  {self.samples.std(dim=(0,2))}")
             self.samples = (self.samples - self.samples.mean(dim=(0, 2), keepdim=True)) / self.samples.std(dim=(0,2), keepdim=True)
+
+        # Normalize each sample by its mean and stddev
+        if normalize_sample:
+            self.samples = (self.samples - self.samples.mean(dim=2, keepdim=True)) / self.samples.std(dim=2, keepdim=True)
     
     def __len__(self):
         return len(self.samples)
