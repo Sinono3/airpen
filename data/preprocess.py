@@ -4,8 +4,8 @@ import ml.processing as P
 import einops
 from scipy.signal import butter, filtfilt
 
-IN = "data/ABCDEF.npz"
-OUT = "./data/ABCDEF_final.npz"
+IN = "./ABCDEF.npz"
+OUT = "./ABCDEF_final.npz"
 
 def plot_mean_y(data, title):
     fig, ax = plt.subplots(1, 1)
@@ -77,31 +77,31 @@ for class_k in data:
 # DEBUG: plot after
 # plot_mean_y(data, "After fixing outliers")
 
-# ---------------------------------------------
-ROTATIONS = 24
-DEGREES = 360 / ROTATIONS
-print(f"STEP4: Augment with {ROTATIONS} rotation ({DEGREES} degrees per rotation)")
+# # ---------------------------------------------
+# ROTATIONS = 24
+# DEGREES = 360 / ROTATIONS
+# print(f"STEP4: Augment with {ROTATIONS} rotation ({DEGREES} degrees per rotation)")
 
-for class_k in data:
-    new_data = []
-    data_k = data[class_k]
+# for class_k in data:
+#     new_data = []
+#     data_k = data[class_k]
 
-    for rot_i in range(ROTATIONS):
-        rot_deg = ROTATIONS * DEGREES
-        rot_rad = (rot_deg / 180) * np.pi
-        rot_matrix = np.array([
-            [np.cos(rot_rad), 0, np.sin(rot_rad)],
-            [0, 1, 0],
-            [-np.sin(rot_rad), 0, np.cos(rot_rad)],
-        ])
+#     for rot_i in range(ROTATIONS):
+#         rot_deg = ROTATIONS * DEGREES
+#         rot_rad = (rot_deg / 180) * np.pi
+#         rot_matrix = np.array([
+#             [np.cos(rot_rad), 0, np.sin(rot_rad)],
+#             [0, 1, 0],
+#             [-np.sin(rot_rad), 0, np.cos(rot_rad)],
+#         ])
 
-        new_data_i = np.copy(data_k)
-        # Only for accelerometer, thus the :3
-        new_data_i[:, :, :3] = einops.einsum(rot_matrix, data_k[:, :, :3], "rows cols, batch time rows -> batch time cols")
-        new_data.append(new_data_i)
+#         new_data_i = np.copy(data_k)
+#         # Only for accelerometer, thus the :3
+#         new_data_i[:, :, :3] = einops.einsum(rot_matrix, data_k[:, :, :3], "rows cols, batch time rows -> batch time cols")
+#         new_data.append(new_data_i)
 
-    new_data = np.concatenate(new_data, axis=0)
-    data[class_k] = new_data
+#     new_data = np.concatenate(new_data, axis=0)
+#     data[class_k] = new_data
 
 # ---------------------------------------------
 print("STEP5: (time, channel) -> (channel, time)")
