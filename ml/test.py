@@ -73,8 +73,6 @@ def main(cfg: TestConfig):
     train_loader, val_loader, test_loader = create_dataloaders(
             cfg.dataset,
             batch_size=128,
-            val_ratio=0.10,
-            test_ratio=0.20,
             seed=42,
         )   
     test_acc, test_preds, test_labels = test(model, test_loader, device, num_classes=4)   

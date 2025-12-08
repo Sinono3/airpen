@@ -142,8 +142,6 @@ def main(cfg: TrainConfig):
     train_loader, val_loader, test_loader = create_dataloaders(
         cfg.dataset,
         batch_size=cfg.batch_size,
-        val_ratio=0.10,
-        test_ratio=0.20,
         seed=cfg.seed,
         transforms=random_xz_rotation,
     )

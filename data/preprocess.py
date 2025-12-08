@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import ml.processing as P
 import einops
 from scipy.signal import butter, filtfilt
 
-IN = "./ABCDEF.npz"
-OUT = "./ABCDEF_final.npz"
+IN = "./samples.npz"
+OUT = "./samples_processed.npz"
 
 def plot_mean_y(data, title):
     fig, ax = plt.subplots(1, 1)
