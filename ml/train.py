@@ -9,6 +9,7 @@ import utils
 from dataset import create_dataloaders
 from hydra.core.config_store import ConfigStore
 from net import Model, ModelConfig
+from processing import random_xz_rotation
 from test import test
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -144,6 +145,7 @@ def main(cfg: TrainConfig):
         val_ratio=0.10,
         test_ratio=0.20,
         seed=cfg.seed,
+        transforms=random_xz_rotation,
     )
 
     model, history = train_model(

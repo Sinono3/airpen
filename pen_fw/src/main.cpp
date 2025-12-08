@@ -22,6 +22,8 @@ void setup() {
   // Initialize Serial communication at 115200 bits per second.
   Serial.begin(115200);
 
+  delay(2000);
+
   // Configure the built-in LED as an output.
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // Ensure the LED is off initially.
@@ -32,8 +34,10 @@ void setup() {
   // --- NEW: Configure BUTTON_3 as an input with an internal pull-up resistor. ---
   pinMode(BUTTON_3, INPUT_PULLUP);
 
+  Wire1.begin();
+
   // --- Initialize the MPU6050 Sensor ---
-  if (!mpu.begin()) {
+  if (!mpu.begin(0x68, &Wire1)) {
     Serial.println("Failed to find MPU6050 chip");
     // Halt execution if the sensor isn't found.
     while (1) {

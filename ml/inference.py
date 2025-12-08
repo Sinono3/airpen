@@ -39,12 +39,9 @@ def main(cfg: InferenceConfig):
         # add batch dim
         x = x.unsqueeze(dim=0)
 
-        # normalize by dataset mean/std
-        mean = torch.tensor([ 0.0998, -0.3096], dtype=torch.float32, device=device)
-        std = torch.tensor([2.5833, 2.4993], dtype=torch.float32, device=device)
-        x = (x - mean[None, :, None]) / std[None, :, None]
         # normalize local to sample
-        x = (x - x.mean(dim=2, keepdim=True)) / x.std(dim=2, keepdim=True)
+        eps = 1e-10
+        x = (x - x.mean(dim=2, keepdim=True)) / (x.std(dim=2, keepdim=True) + eps)
         
         with torch.no_grad():
             y = model(x)

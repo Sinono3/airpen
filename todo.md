@@ -5,6 +5,8 @@
 - [x] Discard vertical (Y) dimension
 - [x] Data augmentation with pen roll rotation implementation
 - [x] Correct normalization procedure
+- [x] fix record crash bug
+- [ ] train/val/test proper separation
 - [ ] extract dataset mean/std on preprocessing, and save into npz
 - [ ] Proper logging with `aim+logging+hydra`
 - [ ] Save everything in the corresponding Hydra run dir

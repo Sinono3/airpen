@@ -6,11 +6,11 @@ class AccelGyroDataset(Dataset):
     def __init__(
         self,
         npz_path,
-        used_labels=["A", "B", "C", "D", "E", "F"],
-        normalize_dataset=True,
-        normalize_sample=True,
+        used_labels=["A", "B", "C", "D"],
+        normalize="sample",
         ignore_y=True,
         ignore_gyro=True,
+        transforms=None,
     ):
         data = np.load(npz_path)
         self.samples = []
@@ -37,24 +37,29 @@ class AccelGyroDataset(Dataset):
         slice_idx = [0, 2] if ignore_y else [0, 1, 2]
         self.samples = self.samples[:, slice_idx, :]
 
-        # Normalize each sample by dataset mean and stddev
-        if normalize_dataset:
+        eps = 1e-10
+        if normalize == "dataset":
+            # Normalize each sample by dataset mean and stddev
             print(f"Dataset mean: {self.samples.mean(dim=(0, 2))}")
             print(f"Dataset std:  {self.samples.std(dim=(0,2))}")
-            self.samples = (self.samples - self.samples.mean(dim=(0, 2), keepdim=True)) / self.samples.std(dim=(0,2), keepdim=True)
+            self.samples = (self.samples - self.samples.mean(dim=(0, 2), keepdim=True)) / (self.samples.std(dim=(0,2), keepdim=True) + eps)
+        elif normalize == "sample":
+            # Normalize each sample by its mean and stddev
+            self.samples = (self.samples - self.samples.mean(dim=2, keepdim=True)) / (self.samples.std(dim=2, keepdim=True) + eps)
 
-        # Normalize each sample by its mean and stddev
-        if normalize_sample:
-            self.samples = (self.samples - self.samples.mean(dim=2, keepdim=True)) / self.samples.std(dim=2, keepdim=True)
+        self.transforms = transforms
     
     def __len__(self):
         return len(self.samples)
     
     def __getitem__(self, idx):
-        return self.samples[idx], self.labels[idx]
+        sample = self.samples[idx]
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+        return sample, self.labels[idx]
 
-def create_dataloaders(npz_path, batch_size=32, val_ratio=0.10, test_ratio=0.20, seed=42, num_workers=2):
-    dataset = AccelGyroDataset(npz_path)
+def create_dataloaders(npz_path, batch_size=32, val_ratio=0.10, test_ratio=0.20, seed=42, num_workers=2, transforms=None):
+    dataset = AccelGyroDataset(npz_path, transforms=transforms)
 
     total_len = len(dataset)
     val_len = int(total_len * val_ratio)

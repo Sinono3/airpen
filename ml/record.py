@@ -4,7 +4,7 @@ import torch
 import einops
 from tqdm import tqdm
 
-SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet"]
+SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet", "--baud", "115200"]
 # DEBUG:
 # SERIAL_DATA_CMD = ["cat", "../test.csv"]
 

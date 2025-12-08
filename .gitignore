@@ -1,6 +1,7 @@
 .pio
 /data/air-writing-export
 /data/dataset_json
+/data/samples
 *.npz
 *.pt
 *.pth

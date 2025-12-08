@@ -2,4 +2,4 @@ model:
   in_channels: 2
   num_classes: 4
   weights: best_model.pth
-dataset: "./data/ABCD_smoothed.npz"
+dataset: "./data/ABCDEF_final.npz"
