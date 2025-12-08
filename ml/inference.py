@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 
 import hydra
@@ -9,6 +10,8 @@ import torch.nn.functional as F
 import utils
 from hydra.core.config_store import ConfigStore
 from net import ModelConfig
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,6 +25,7 @@ cs.store(name="inference", node=InferenceConfig)
 def main(cfg: InferenceConfig):
     LABELS = ['A', 'B', 'C' , 'D', 'E', 'F']
     LABELS = LABELS[:cfg.model.num_classes]
+    utils.setup_logging()
     device = utils.prepare_device()
     model = net.load_model(cfg.model, device)
     model.eval()
@@ -50,9 +54,9 @@ def main(cfg: InferenceConfig):
 
         cls_idx = torch.argmax(y_prob[0, :], dim=-1)
         pred = LABELS[cls_idx]
-        print(f"predicted label: {pred} (confidence: {y_prob[0, cls_idx]:.3f})")
+        logger.info("predicted label: %s (confidence: %.3f)", pred, y_prob[0, cls_idx])
         for i, label in enumerate(LABELS):
-            print(f"P({label}) = {y_prob[0, i]}")
+            logger.info("P(%s) = %.4f", label, y_prob[0, i])
 
 if __name__ == "__main__":
     main()

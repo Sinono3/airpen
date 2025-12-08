@@ -1,8 +1,12 @@
+import logging
 import subprocess
 import time
-import torch
+
 import einops
+import torch
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet", "--baud", "115200"]
 # DEBUG:
@@ -52,8 +56,8 @@ def record(t, device: torch.device | str):
 
 
 def countdown(gerund: str, seconds: int):
-    print(f"{gerund} in...")
+    logger.info("%s in...", gerund)
     for i in range(seconds):
-        print(f"{seconds - i}... ")
+        logger.info("%s... ", seconds - i)
         time.sleep(1)
-    print(f"{gerund}.")
+    logger.info("%s.", gerund)

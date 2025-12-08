@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -5,6 +6,8 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from hydra.core.config_store import ConfigStore
+
+logger = logging.getLogger(__name__)
 
 
 class Model(nn.Module):
@@ -44,7 +47,7 @@ def load_model(cfg: ModelConfig, device: torch.device | str) -> Model:
     model.to(device)
 
     if cfg.weights is not None:
-        print(f"Loading model from {cfg.weights}")
+        logger.info("Loading model from %s", cfg.weights)
         best_model = torch.load(cfg.weights, map_location=device)
         model.load_state_dict(best_model['model_state_dict'])
 
