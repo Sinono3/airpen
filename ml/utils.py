@@ -1,38 +1,10 @@
 import logging
-import sys
-from pathlib import Path, PosixPath
-from typing import Optional
+from pathlib import Path
 
 import torch
 from omegaconf import OmegaConf
 
 logger = logging.getLogger(__name__)
-
-
-def setup_logging(log_file: Optional[str | Path] = None, level: int = logging.INFO) -> logging.Logger:
-    """
-    Configure root logging with console and file handlers.
-    """
-    log_file_path = Path(log_file) if log_file is not None else Path.cwd() / "run.log"
-    log_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    root_logger = logging.getLogger()
-    root_logger.setLevel(level)
-
-    if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
-        root_logger.addHandler(console_handler)
-
-    if not any(isinstance(h, logging.FileHandler) and Path(getattr(h, "baseFilename", "")) == log_file_path for h in root_logger.handlers):
-        file_handler = logging.FileHandler(log_file_path)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
-
-    logger.debug("Logging initialized at %s (file: %s)", logging.getLevelName(level), log_file_path)
-    return root_logger
-
 
 def prepare_device() -> torch.device:
     device = torch.device("cpu")
@@ -45,8 +17,7 @@ def prepare_device() -> torch.device:
 
 
 def convert_paths(obj):
-    # Convert single PosixPath
-    if isinstance(obj, PosixPath):
+    if isinstance(obj, Path):
         return str(obj)
 
     # Traverse dicts

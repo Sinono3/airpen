@@ -18,7 +18,7 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def test(model, loader, device, num_classes: int, aim_run: Optional[Run] = None):
+def test(model, loader, device, num_classes: int, run: Optional[Run] = None):
     """Test the model and return detailed metrics"""
     model.eval()
     correct = 0
@@ -57,11 +57,11 @@ def test(model, loader, device, num_classes: int, aim_run: Optional[Run] = None)
         if cls_mask.sum() > 0:
             cls_acc = 100. * (all_preds[cls_mask] == all_labels[cls_mask]).sum() / cls_mask.sum()
             logger.info("  Class %s: %.2f%% (%d samples)", cls, cls_acc, cls_mask.sum())
-            if aim_run is not None:
-                aim_run.track(cls_acc, name="accuracy", context={"phase": "test", "class": cls})
+            if run is not None:
+                run.track(cls_acc, name="accuracy", context={"phase": "test", "class": cls})
 
-    if aim_run is not None:
-        aim_run.track(accuracy, name="accuracy", context={"phase": "test"})
+    if run is not None:
+        run.track(accuracy, name="accuracy", context={"phase": "test"})
 
     logger.info("%s", "=" * 60)
     return accuracy, all_preds, all_labels
@@ -81,8 +81,8 @@ def main(cfg: TestConfig):
 
     device = utils.prepare_device()
     model = net.load_model(cfg.model, device)
-    aim_run = Run(repo=str(Path.cwd()), experiment="test")
-    aim_run["hparams"] = OmegaConf.to_container(cfg, resolve=True)
+    run = Run(repo=str(Path.cwd()), experiment="test")
+    run["hparams"] = OmegaConf.to_container(cfg, resolve=True)
 
     train_loader, val_loader, test_loader = create_dataloaders(
             cfg.dataset,
@@ -90,10 +90,10 @@ def main(cfg: TestConfig):
             seed=42,
         )
     test_acc, test_preds, test_labels = test(
-        model, test_loader, device, num_classes=cfg.model.num_classes, aim_run=aim_run
+        model, test_loader, device, num_classes=cfg.model.num_classes, run=run
     )
-    aim_run["metrics/test_accuracy"] = test_acc
-    aim_run.close()
+    run["metrics/test_accuracy"] = test_acc
+    run.close()
 
 if __name__ == "__main__":
     main()
