@@ -5,5 +5,15 @@ model:
 dataset: "./data/samples_processed_split.npz"
 batch_size: 1024
 num_epochs: 300
-lr: 0.001
 seed: 42
+optimizer:
+  name: AdamW
+  params:
+    lr: 0.001
+    weight_decay: 0.1
+scheduler:
+  name: ReduceLROnPlateau
+  params:
+    mode: max
+    factor: 0.5
+    patience: 5

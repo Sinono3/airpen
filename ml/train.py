@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import copy
 import inspect
 import io
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -75,22 +77,48 @@ def validate(model, loader, criterion, device):
     accuracy = 100. * correct / total
     return avg_loss, accuracy
 
+
+def create_optimizer(model: Model, optimizer_cfg):
+    try:
+        optimizer_cls = getattr(torch.optim, optimizer_cfg.name)
+    except AttributeError as exc:
+        raise ValueError(f"Unknown optimizer: {optimizer_cfg.name}") from exc
+    return optimizer_cls(model.parameters(), **optimizer_cfg.params)
+
+
+def create_scheduler(optimizer, scheduler_cfg):
+    if scheduler_cfg is None or scheduler_cfg.name is None:
+        return None
+    try:
+        scheduler_cls = getattr(torch.optim.lr_scheduler, scheduler_cfg.name)
+    except AttributeError as exc:
+        raise ValueError(f"Unknown scheduler: {scheduler_cfg.name}") from exc
+    return scheduler_cls(optimizer, **scheduler_cfg.params)
+
+
+def step_scheduler(scheduler, metric):
+    if scheduler is None:
+        return
+    try:
+        scheduler.step(metric)
+    except TypeError:
+        scheduler.step()
+
 def train_model(
     model: Model,
     train_loader: DataLoader,
     val_loader: DataLoader,
     num_epochs: int = 50,
-    lr: float = 0.001,
+    optimizer_cfg: OptimizerConfig | None = None,
+    scheduler_cfg: SchedulerConfig | None = None,
     device: torch.device | str = "cuda",
     run: Optional[Run] = None,
-) -> tuple[Model, dict, float]:
+) -> tuple[Model, float]:
     """Main training function with validation"""
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="max", factor=0.5, patience=5
-    )
+    optimizer = create_optimizer(model, optimizer_cfg)
+    scheduler = create_scheduler(optimizer, scheduler_cfg)
 
     best_val_acc = 0.0
     best_model_state = copy.deepcopy(model.state_dict())
@@ -98,36 +126,40 @@ def train_model(
     logger.info("Starting training on %s", device)
     logger.info("Training samples: %d | Validation samples: %d", len(train_loader.dataset), len(val_loader.dataset))
 
-    for epoch in range(num_epochs):
-        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
-        val_loss, val_acc = validate(model, val_loader, criterion, device)
+    try:
+        for epoch in range(num_epochs):
+            train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
+            val_loss, val_acc = validate(model, val_loader, criterion, device)
 
-        scheduler.step(val_acc)
-        current_lr = optimizer.param_groups[0]["lr"]
+            step_scheduler(scheduler, val_loss)
+            current_lr = optimizer.param_groups[0]["lr"]
 
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            best_model_state = copy.deepcopy(model.state_dict())
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                best_model_state = copy.deepcopy(model.state_dict())
 
-        logger.info(
-            "Epoch %d/%d | lr=%.5f | train_loss=%.4f train_acc=%.2f%% | val_loss=%.4f val_acc=%.2f%% | best_val_acc=%.2f%%",
-            epoch + 1,
-            num_epochs,
-            current_lr,
-            train_loss,
-            train_acc,
-            val_loss,
-            val_acc,
-            best_val_acc,
-        )
+            logger.info(
+                "Epoch %d/%d | lr=%.5f | train_loss=%.4f train_acc=%.2f%% | val_loss=%.4f val_acc=%.2f%% | best_val_acc=%.2f%%",
+                epoch + 1,
+                num_epochs,
+                current_lr,
+                train_loss,
+                train_acc,
+                val_loss,
+                val_acc,
+                best_val_acc,
+            )
 
-        if run is not None:
-            run.track(train_loss, name="loss", step=epoch, context={"phase": "train"})
-            run.track(train_acc, name="accuracy", step=epoch, context={"phase": "train"})
-            run.track(val_loss, name="loss", step=epoch, context={"phase": "val"})
-            run.track(val_acc, name="accuracy", step=epoch, context={"phase": "val"})
-            run.track(current_lr, name="lr", step=epoch)
+            if run is not None:
+                run.track(train_loss, name="loss", step=epoch, context={"phase": "train"})
+                run.track(train_acc, name="accuracy", step=epoch, context={"phase": "train"})
+                run.track(val_loss, name="loss", step=epoch, context={"phase": "val"})
+                run.track(val_acc, name="accuracy", step=epoch, context={"phase": "val"})
+                run.track(current_lr, name="lr", step=epoch)
+    except KeyboardInterrupt:
+        logger.error("Keyboard interrupt detected. Stopping training early")
 
+    logger.info("Returning model with best validation accuracy.")
     model.load_state_dict(best_model_state)
     logger.info("Training completed. Best validation accuracy: %.2f%%", best_val_acc)
     if run is not None:
@@ -136,13 +168,26 @@ def train_model(
     return model, best_val_acc
 
 @dataclass
+class OptimizerConfig:
+    name: str = "AdamW"
+    params: dict = field(default_factory=lambda: {"lr": 0.001, "weight_decay": 0.1})
+
+
+@dataclass
+class SchedulerConfig:
+    name: str | None = "ReduceLROnPlateau"
+    params: dict = field(default_factory=lambda: {"mode": "max", "factor": 0.5, "patience": 5})
+
+
+@dataclass
 class TrainConfig:
     model: ModelConfig
     dataset: Path
     batch_size: int
     num_epochs: int
-    lr: float
     seed: int
+    optimizer: OptimizerConfig = OptimizerConfig()
+    scheduler: SchedulerConfig | None = SchedulerConfig()
 
 cs = ConfigStore.instance()
 cs.store(group="model", name="base", node=ModelConfig)
@@ -175,7 +220,8 @@ def main(cfg: TrainConfig):
         train_loader,
         val_loader,
         num_epochs=cfg.num_epochs,
-        lr=cfg.lr,
+        optimizer_cfg=cfg.optimizer,
+        scheduler_cfg=cfg.scheduler,
         device=device,
         run=run,
     )
