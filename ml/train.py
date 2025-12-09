@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from functools import partial
 import inspect
 import io
 import logging
@@ -19,7 +20,7 @@ from hydra.core.config_store import ConfigStore
 from hydra.utils import get_original_cwd
 from net import Model, ModelConfig
 from omegaconf import OmegaConf
-from processing import random_xz_rotation
+from processing import random_rotation
 from test import test
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -169,14 +170,14 @@ def train_model(
 
 @dataclass
 class OptimizerConfig:
-    name: str = "AdamW"
-    params: dict = field(default_factory=lambda: {"lr": 0.001, "weight_decay": 0.1})
+    name: str = ""
+    params: dict = field(default_factory=lambda: {})
 
 
 @dataclass
 class SchedulerConfig:
-    name: str | None = "ReduceLROnPlateau"
-    params: dict = field(default_factory=lambda: {"mode": "max", "factor": 0.5, "patience": 5})
+    name: str | None = ""
+    params: dict = field(default_factory=lambda: {})
 
 
 @dataclass
@@ -212,8 +213,10 @@ def main(cfg: TrainConfig):
         cfg.dataset,
         batch_size=cfg.batch_size,
         seed=cfg.seed,
-        transforms=random_xz_rotation,
+        # Randomly rotate in XY plane
+        transforms=partial(random_rotation, plane=(0, 1)),
     )
+    logger.info("Steps per epoch: %s", len(train_loader))
 
     model, best_val_acc = train_model(
         model,

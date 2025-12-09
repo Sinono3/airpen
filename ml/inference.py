@@ -1,3 +1,4 @@
+import einops
 import logging
 from dataclasses import dataclass
 
@@ -23,25 +24,41 @@ cs.store(name="inference", node=InferenceConfig)
 
 @hydra.main(config_path="./configs/", config_name="inference", version_base=None)
 def main(cfg: InferenceConfig):
-    LABELS = ['A', 'B', 'C' , 'D', 'E', 'F']
-    LABELS = LABELS[:cfg.model.num_classes]
-    utils.setup_logging()
+    LABELS = [
+        "A",
+        "C",
+        "E",
+        "I",
+        "L",
+        "N",
+        "O",
+        "R",
+        "S",
+        "T",
+    ]
     device = utils.prepare_device()
     model = net.load_model(cfg.model, device)
     model.eval()
 
     for record_idx in range(1000):
         record.countdown("recording", 1)
-        x = record.record(132, device)
+        x = record.record(500, device)
 
+        # Remove timestamp
+        x = x[1:]
         # Remove gyro channels, as we don't use them
         x = x[:3, :]
-        # remove Y
-        x = x[[0,2], :]
         # Apply smoothing before sending to model
+        print (x.shape)
         x = processing.process_raw(x)
-        # add batch dim
-        x = x.unsqueeze(dim=0)
+        X = []
+        for i in range(100):
+            X.append(processing.random_rotation(x, plane=(0, 1)))
+        x, _ = einops.pack(X, "* channel time")
+
+        # # add batch dim
+        # x = x.unsqueeze(dim=0)
+        print(x.shape)
 
         # normalize local to sample
         eps = 1e-10

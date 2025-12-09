@@ -47,11 +47,12 @@ def record(t, device: torch.device | str):
     """
     x = []
 
-    for line in run_command_until_n_lines(SERIAL_DATA_CMD, t):
+    for line in run_command_until_n_lines(SERIAL_DATA_CMD, t+2):
         x.append(list(map(float, line.split(","))))
 
+    x = x[1:-1]
     x = torch.tensor(x, dtype=torch.float32, device=device)
-    x = einops.rearrange(x, 't c -> c t') # c = 6
+    x = einops.rearrange(x, 't c -> c t')
     return x
 
 

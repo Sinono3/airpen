@@ -18,41 +18,24 @@ def process_raw(x: torch.Tensor):
     return x
 
 
-def random_xz_rotation(sample: torch.Tensor) -> torch.Tensor:
+def random_rotation(sample: torch.Tensor, plane: tuple[int, int] = (0, 1)) -> torch.Tensor:
     """
-    Applies a random rotation in the XZ plane (around the Y axis) to
-    accelerometer channels of a sample shaped as (channels, time).
+    Random rotation in a specified plane (default XY).
+    sample: (channels, time)
+    plane: indices of the two axes to rotate, e.g. (0,2) for XZ.
     """
     if sample.ndim != 2:
-        raise ValueError("Expected sample tensor with shape (channels, time)")
+        raise ValueError("Expected (channels, time)")
 
-    # Avoid mutating the underlying dataset tensor
+    a, b = plane
+    if a >= sample.shape[0] or b >= sample.shape[0]:
+        raise ValueError("Rotation plane indices out of range")
+
     sample = sample.clone()
-    num_channels = sample.shape[0]
-
     theta = torch.rand(1, device=sample.device).item() * 2 * math.pi
-    cos_t = math.cos(theta)
-    sin_t = math.sin(theta)
+    c, s = math.cos(theta), math.sin(theta)
 
-    if num_channels >= 3:
-        rot_matrix = sample.new_tensor(
-            [
-                [cos_t, 0.0, sin_t],
-                [0.0, 1.0, 0.0],
-                [-sin_t, 0.0, cos_t],
-            ]
-        )
-        sample[:3, :] = rot_matrix @ sample[:3, :]
-    elif num_channels == 2:
-        # Assume channels correspond to X and Z in that order.
-        rot_matrix = sample.new_tensor(
-            [
-                [cos_t, sin_t],
-                [-sin_t, cos_t],
-            ]
-        )
-        sample[:2, :] = rot_matrix @ sample[:2, :]
-    else:
-        raise ValueError("Random XZ rotation requires at least X and Z channels")
+    R = sample.new_tensor([[c, -s], [s, c]])
+    sample[[a, b], :] = R @ sample[[a, b], :]
 
     return sample

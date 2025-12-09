@@ -45,36 +45,37 @@ print("STEP2: Apply smoothing with lowpass filter")
 for class_k in data:
     data[class_k] = lowpass_filter(data[class_k], cutoff=5, fs=50)
 
-# ---------------------------------------------
-print("STEP3: Fix outliers")
-# (rows, cols)
-ROTATION_MATRIX = np.array([
-    [1, 0, 0],
-    [0, -1, 0],
-    [0, 0, -1],
-], dtype=np.float32)
+# # ---------------------------------------------
+# print("STEP3: Fix outliers")
+# # (rows, cols)
+# ROTATION_MATRIX = np.array([
+#     [1, 0, 0],
+#     [0, -1, 0],
+#     [0, 0, -1],
+# ], dtype=np.float32)
 
-# DEBUG: plot before
+# # DEBUG: plot before
 # plot_mean_y(data, "Before fixing outliers")
 
-for class_k in data:
-    data_k = data[class_k]
-    mean_y = data_k[:,:,1].mean(axis=1)
-    # mean_y > 0.0 --> outlier
-    outlier_idxs = np.where(mean_y > 0.0)[0]
+# for class_k in data:
+#     data_k = data[class_k]
+#     mean_y = data_k[:,:,1].mean(axis=1)
+#     # mean_y > 0.0 --> outlier
+#     outlier_idxs = np.where(mean_y > 0.0)[0]
 
-    print(f"{class_k}:")
-    print(f"- Samples: {len(data_k)}")
-    print(f"- Outliers: {len(outlier_idxs)} ({len(outlier_idxs)/len(data_k)*100:.2f}%)")
+#     print(f"{class_k}:")
+#     print(f"- Samples: {len(data_k)}")
+#     print(f"- Outliers: {len(outlier_idxs)} ({len(outlier_idxs)/len(data_k)*100:.2f}%)")
 
-    for outlier_idx in outlier_idxs:
-        # Multiply by 180-degree rotation matrix to the accelerometer cols
-        data_k[outlier_idx, :, :3] = einops.einsum(ROTATION_MATRIX, data_k[outlier_idx, :, :3], "rows cols, time rows -> time cols")
+#     for outlier_idx in outlier_idxs:
+#         # Multiply by 180-degree rotation matrix to the accelerometer cols
+#         data_k[outlier_idx, :, :3] = einops.einsum(ROTATION_MATRIX, data_k[outlier_idx, :, :3], "rows cols, time rows -> time cols")
 
-    data[class_k] = data_k
+#     data[class_k] = data_k
 
-# DEBUG: plot after
+# # DEBUG: plot after
 # plot_mean_y(data, "After fixing outliers")
+# exit()
 
 # # ---------------------------------------------
 # ROTATIONS = 24

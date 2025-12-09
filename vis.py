@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = dict(np.load("data/ABCDEF_noaug.npz"))
-classes = ['A', 'B', 'C', 'D']
+data = dict(np.load("data/samples_processed.npz"))
+classes = ['A']
 data = {c: torch.from_numpy(data[c]) for c in classes}
 
 for c in classes:
@@ -51,4 +51,4 @@ for c in classes:
     data_pos[c] = pos   # final positions (N, 2, T)
 
 for i in range(20):
-    show_animated(data_pos['D'][i], f"Sample {i}")
+    show_animated(data_pos['A'][i], f"Sample {i}")

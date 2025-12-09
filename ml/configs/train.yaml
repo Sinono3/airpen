@@ -1,19 +1,31 @@
 model:
-  in_channels: 2
+  in_channels: 3
   num_classes: 10
   weights:
 dataset: "./data/samples_processed_split.npz"
-batch_size: 1024
-num_epochs: 300
+batch_size: 128
+num_epochs: 100
 seed: 42
 optimizer:
   name: AdamW
   params:
-    lr: 0.001
-    weight_decay: 0.1
+    lr: 0.001 # <----- this is overriden by the LR scheduler
+    weight_decay: 0.05
 scheduler:
-  name: ReduceLROnPlateau
+  name: OneCycleLR
   params:
-    mode: max
-    factor: 0.5
-    patience: 5
+    max_lr: 0.01
+    epochs: 100
+    steps_per_epoch: 42 # this value is obtained by doing `len(train_loader)`
+    pct_start: 0.3 # 30% time is warmup
+# scheduler:
+#   name: CosineAnnealingWarmRestarts
+#   params:
+#     T_0: 10
+#     T_mult: 2
+# scheduler:
+#   name: ReduceLROnPlateau
+#   params:
+#     mode: max
+#     factor: 0.5
+#     patience: 5
