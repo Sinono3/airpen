@@ -52,8 +52,9 @@ def main(cfg: InferenceConfig):
         print (x.shape)
         x = processing.process_raw(x)
         X = []
-        for i in range(100):
-            X.append(processing.random_rotation(x, plane=(0, 1)))
+        # for i in range(100):
+        #     X.append(processing.random_rotation(x, normal=torch.tensor([0.0, 0.0, -1.0], device=torch.device('mps')), normal_std=6.14))
+        X = x.unsqueeze(dim=0)
         x, _ = einops.pack(X, "* channel time")
 
         # # add batch dim

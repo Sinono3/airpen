@@ -1,4 +1,4 @@
 model:
   in_channels: 3
   num_classes: 10
-  weights: /Users/aldo/Homework/Embedded/airpen/outputs/artifacts/40e1132317e7422cbe598997/model.pth
+  weights: /Users/aldo/Homework/Embedded/airpen/outputs/artifacts/b59616c088a04ec59f77738a/model.pth

@@ -8,6 +8,7 @@ class AccelGyroDataset(Dataset):
         self.samples = torch.from_numpy(x).float()
         self.labels = torch.from_numpy(y).long()
         self.eps = 1e-10
+        self.normalize = normalize
 
         if ignore_gyro:
             self.samples = self.samples[:, :3, :]

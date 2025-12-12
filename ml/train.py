@@ -20,12 +20,18 @@ from hydra.core.config_store import ConfigStore
 from hydra.utils import get_original_cwd
 from net import Model, ModelConfig
 from omegaconf import OmegaConf
-from processing import random_rotation
+from processing import augment_accelerometer_temporal, random_rotation
 from test import test
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
+
+def augment(x):
+    x = random_rotation(x, normal=torch.tensor([0.0, 0.0, -1.0]), normal_std=0.8)
+    x[:3, :] = augment_accelerometer_temporal(x[:3, :], scale_range=(0.5, 1.5), translate_range=(-0.5, 0.5))
+    return x
 
 
 def train_epoch(model: Model, loader: DataLoader, criterion, optimizer, device):
@@ -214,7 +220,7 @@ def main(cfg: TrainConfig):
         batch_size=cfg.batch_size,
         seed=cfg.seed,
         # Randomly rotate in XY plane
-        transforms=partial(random_rotation, plane=(0, 1)),
+        transforms=augment,
     )
     logger.info("Steps per epoch: %s", len(train_loader))
 
