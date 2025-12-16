@@ -27,13 +27,6 @@ void setup() {
   // Configure the built-in LED as an output.
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // Ensure the LED is off initially.
-
-  // Configure Button A as an input with an internal pull-up resistor.
-  pinMode(BUTTON_1, INPUT_PULLUP);
-
-  // --- NEW: Configure BUTTON_3 as an input with an internal pull-up resistor. ---
-  pinMode(BUTTON_3, INPUT_PULLUP);
-
   Wire1.begin();
 
   // --- Initialize the MPU6050 Sensor ---

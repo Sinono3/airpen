@@ -1,34 +1,64 @@
+import einops
 import numpy as np
+import processing
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 class AccelGyroDataset(Dataset):
-    def __init__(self, x, y, normalize="sample", ignore_gyro=True, transforms=None):
+    def __init__(self, x, y, mode='pca', normalize=None, smooth=True, augment=False):
         self.samples = torch.from_numpy(x).float()
         self.labels = torch.from_numpy(y).long()
         self.eps = 1e-10
         self.normalize = normalize
-
-        if ignore_gyro:
-            self.samples = self.samples[:, :3, :]
+        self.augment = augment
+        self.smooth = smooth
+        self.mode = mode
 
         if normalize == "dataset":
             self.samples = (self.samples - self.samples.mean(dim=(0, 2), keepdim=True)) / (
                 self.samples.std(dim=(0, 2), keepdim=True) + self.eps
             )
-        self.transforms = transforms
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        sample = self.samples[idx]
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        sample = self.samples[idx].clone()
+        
+        # gravity = torch.tensor(processing.GRAVITY)
+        # sample = processing.remove_gravity_constant(sample)
+        # if self.augment:
+        #     sample[:3] = processing.random_rotation(sample[:3], axis=gravity, angle_rad_std=0.02)
+        # sample[:3] = processing.align_to_plane(sample[:3], gravity)
+
+        # if self.smooth:
+        #     sample = processing.smooth(sample)
         if self.normalize == 'sample':
             sample = (sample - sample.mean(dim=1, keepdim=True)) / (sample.std(dim=1, keepdim=True) + self.eps)
-        return sample, self.labels[idx]
+
+        match self.mode:
+            case "acc":
+                return sample[:3], self.labels[idx]
+            case "acc+gyr":
+                return sample, self.labels[idx]
+            case "pca":
+                acc = sample[:3]
+                # pca = processing.canonical_transform_robust(acc)
+                pca = processing.pca_transform_3_handedness(acc)             
+                pca = processing.align_to_first_movement(pca)             
+
+                # crop AUGMENTATION
+                pca = processing.integrate_crop_resample_diff(
+                    pca, crop_min=0.5, crop_max=1.0
+                )
+                # print(pca.shape)
+
+                # random:
+                # pca = pca[torch.randperm(3), :]
+                return pca, self.labels[idx]
+            case _:
+                raise NotImplementedError()
 
 
 def create_dataloaders(
@@ -36,9 +66,7 @@ def create_dataloaders(
     batch_size=32,
     num_workers=2,
     seed=42,
-    transforms=None,
-    normalize="sample",
-    ignore_gyro=True,
+    normalize=None,
 ):
     data = np.load(npz_path)
     required = ("train_x", "train_y", "val_x", "val_y", "test_x", "test_y")
@@ -46,9 +74,10 @@ def create_dataloaders(
         if key not in data:
             raise ValueError(f"Missing '{key}' in split dataset {npz_path}")
 
-    train_ds = AccelGyroDataset(data["train_x"], data["train_y"], normalize, ignore_gyro, transforms)
-    val_ds = AccelGyroDataset(data["val_x"], data["val_y"], normalize, ignore_gyro, transforms)
-    test_ds = AccelGyroDataset(data["test_x"], data["test_y"], normalize, ignore_gyro, transforms)
+    dataset_args = dict(normalize=normalize, mode='pca', smooth=True)
+    train_ds = AccelGyroDataset(data["train_x"], data["train_y"], augment=True, **dataset_args)
+    val_ds = AccelGyroDataset(data["val_x"], data["val_y"], augment=False, **dataset_args)
+    test_ds = AccelGyroDataset(data["test_x"], data["test_y"], augment=False, **dataset_args)
 
     generator = torch.Generator().manual_seed(seed)
     loader_args = dict(

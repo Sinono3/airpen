@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-SERIAL_DATA_CMD = ["pio", "device", "monitor", "--quiet", "--baud", "115200"]
+SERIAL_DATA_CMD = ["pio", "device", "monitor", "--port", "/dev/cu.usbmodem2101", "--quiet", "--baud", "115200"]
 # DEBUG:
 # SERIAL_DATA_CMD = ["cat", "../test.csv"]
 
@@ -42,8 +42,8 @@ def run_command_until_n_lines(command, n_lines) -> list[str] :
 
 def record(t, device: torch.device | str):
     """
-    return shape: (6, t)
-    6 channels: acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z
+    return shape: (7, t)
+    7 channels: timestamp, acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z
     """
     x = []
 
@@ -53,6 +53,8 @@ def record(t, device: torch.device | str):
     x = x[1:-1]
     x = torch.tensor(x, dtype=torch.float32, device=device)
     x = einops.rearrange(x, 't c -> c t')
+    # remove timestamp
+    x = x[1:]
     return x
 
 

@@ -25,11 +25,6 @@ def plot_mean_y(data, title):
     plt.show()
     plt.close(fig)
 
-def lowpass_filter(data, cutoff, fs, order=4):
-    b, a = butter(order, cutoff / (0.5 * fs), btype='low')
-    filtered = filtfilt(b, a, data, axis=1)
-    return filtered
-
 data = dict(np.load(IN))
 
 # ---------------------------------------------
@@ -40,10 +35,14 @@ print(f"Deleting unused classes: {unused_classes}")
 for class_idx in unused_classes:
     del data[class_idx]
 
-# ---------------------------------------------
-print("STEP2: Apply smoothing with lowpass filter")
-for class_k in data:
-    data[class_k] = lowpass_filter(data[class_k], cutoff=5, fs=50)
+# # ---------------------------------------------
+# print("STEP2: Apply smoothing with lowpass filter")
+# def lowpass_filter(data, cutoff, fs, order=4):
+#     b, a = butter(order, cutoff / (0.5 * fs), btype='low')
+#     filtered = filtfilt(b, a, data, axis=1)
+#     return filtered
+# for class_k in data:
+#     data[class_k] = lowpass_filter(data[class_k], cutoff=5, fs=50)
 
 # # ---------------------------------------------
 # print("STEP3: Fix outliers")

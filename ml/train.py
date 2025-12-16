@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import copy
-from functools import partial
 import inspect
-import io
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,22 +15,12 @@ import utils
 from aim import Run
 from dataset import create_dataloaders
 from hydra.core.config_store import ConfigStore
-from hydra.utils import get_original_cwd
 from net import Model, ModelConfig
-from omegaconf import OmegaConf
-from processing import augment_accelerometer_temporal, random_rotation
 from test import test
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
-
-
-def augment(x):
-    x = random_rotation(x, normal=torch.tensor([0.0, 0.0, -1.0]), normal_std=0.8)
-    x[:3, :] = augment_accelerometer_temporal(x[:3, :], scale_range=(0.5, 1.5), translate_range=(-0.5, 0.5))
-    return x
-
 
 def train_epoch(model: Model, loader: DataLoader, criterion, optimizer, device):
     """Train for one epoch and return average loss and accuracy"""
@@ -218,9 +206,7 @@ def main(cfg: TrainConfig):
     train_loader, val_loader, test_loader = create_dataloaders(
         cfg.dataset,
         batch_size=cfg.batch_size,
-        seed=cfg.seed,
-        # Randomly rotate in XY plane
-        transforms=augment,
+        seed=cfg.seed
     )
     logger.info("Steps per epoch: %s", len(train_loader))
 
@@ -247,8 +233,9 @@ def main(cfg: TrainConfig):
     }
     torch.save(model.state_dict(), "model.pth")
     run.log_artifact("model.pth")
+    hash = run.hash
     run.close()
-    logger.info("Aim run closed. Checkpoint saved as artifact.")
+    logger.info(f"Aim run closed. Checkpoint saved as artifact at /Users/aldo/Homework/Embedded/airpen/outputs/artifacts/{hash}/model.pth")
 
 if __name__ == "__main__":
     main()
