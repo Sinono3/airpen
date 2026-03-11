@@ -27,10 +27,9 @@ void setup() {
   // Configure the built-in LED as an output.
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // Ensure the LED is off initially.
-  Wire1.begin();
 
   // --- Initialize the MPU6050 Sensor ---
-  if (!mpu.begin(0x68, &Wire1)) {
+  if (!mpu.begin(0x68)) {
     Serial.println("Failed to find MPU6050 chip");
     // Halt execution if the sensor isn't found.
     while (1) {
@@ -63,6 +62,7 @@ void loop() {
       float gyroZ = g.gyro.z * 180 / M_PI;
       
       // 3. Print data in CSV format
+      Serial.print("123,");
       Serial.print(a.acceleration.x);
       Serial.print(",");
       Serial.print(a.acceleration.y);
@@ -75,7 +75,4 @@ void loop() {
       Serial.print(",");
       Serial.print(gyroZ);
       Serial.print("\n");
-
-      // 4. Wait for a short period to control the data sampling rate.
-      delay(10);
 }

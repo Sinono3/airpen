@@ -22,28 +22,34 @@ def visualize_augmentation_pipeline(
     # Step 0: Original
     steps['0. Original'] = sample[:3].clone()
     
-    # Step 1: Remove gravity constant
-    sample = processing.remove_gravity_constant(sample)
-    steps['1. Gravity removed'] = sample[:3].clone()
+    # # Step 1: Remove gravity constant
+    # sample = processing.remove_gravity_constant(sample)
+    # steps['1. Gravity removed'] = sample[:3].clone()
     
-    # Step 2: Random rotation (optional)
-    if augment:
-        sample[:3] = processing.random_rotation(sample[:3], axis=gravity, angle_rad_std=0.02)
-        steps['2. Rotated'] = sample[:3].clone()
+    # # Step 2: Random rotation (optional)
+    # if augment:
+    #     sample[:3] = processing.random_rotation(sample[:3], axis=gravity, angle_rad_std=0.02)
+    #     steps['2. Rotated'] = sample[:3].clone()
     
-    # Step 3: Align to plane
-    sample[:3] = processing.align_to_plane(sample[:3], gravity)
-    steps['3. Aligned to plane'] = sample[:3].clone()
+    # # Step 3: Align to plane
+    # sample[:3] = processing.align_to_plane(sample[:3], gravity)
+    # steps['3. Aligned to plane'] = sample[:3].clone()
     
     # Step 4: Smooth (optional)
     if smooth:
         sample = processing.smooth(sample)
-        steps['4. Smoothed'] = sample[:3].clone()
+        steps['1. Smoothed'] = sample[:3].clone()
+
+    sample = processing.pca_transform_3_handedness(sample[:3])
+    steps['2. PCA:'] = sample.clone()
+
+    sample = processing.align_to_first_movement(sample)
+    steps['3. Aligned'] = sample.clone()
     
-    # Step 5: Normalize (optional)
-    if normalize == 'sample':
-        sample = (sample - sample.mean(dim=1, keepdim=True)) / (sample.std(dim=1, keepdim=True) + eps)
-        steps['5. Normalized'] = sample[:3].clone()
+    # # Step 5: Normalize (optional)
+    # if normalize == 'sample':
+    #     sample = (sample - sample.mean(dim=1, keepdim=True)) / (sample.std(dim=1, keepdim=True) + eps)
+    #     steps['5. Normalized'] = sample[:3].clone()
     
     # Create figure with two rows
     fig = plt.figure(figsize=(16, 10))
@@ -128,6 +134,6 @@ if __name__ == '__main__':
     # Visualize with different settings
     # visualize_augmentation_pipeline(sample, augment=True, smooth=True, normalize='sample')
     # visualize_augmentation_pipeline(sample, augment=False, smooth=True, normalize='sample')
-    for i in range(10):
+    for i in range(1):
         sample = torch.from_numpy(data['train_x'][i]).float()  # (6, 500)
-        visualize_augmentation_pipeline(sample, augment=False, smooth=False, normalize=None)
+        visualize_augmentation_pipeline(sample, augment=False, smooth=True)
