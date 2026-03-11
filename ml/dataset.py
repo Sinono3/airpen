@@ -32,8 +32,8 @@ class AccelGyroDataset(Dataset):
         #     sample[:3] = processing.random_rotation(sample[:3], axis=gravity, angle_rad_std=0.02)
         # sample[:3] = processing.align_to_plane(sample[:3], gravity)
 
-        # if self.smooth:
-        #     sample = processing.smooth(sample)
+        if self.smooth:
+            sample = processing.smooth(sample)
         if self.normalize == 'sample':
             sample = (sample - sample.mean(dim=1, keepdim=True)) / (sample.std(dim=1, keepdim=True) + self.eps)
 
@@ -44,19 +44,18 @@ class AccelGyroDataset(Dataset):
                 return sample, self.labels[idx]
             case "pca":
                 acc = sample[:3]
-                # pca = processing.canonical_transform_robust(acc)
+                # # crop AUGMENTATION
+                # acc = processing.integrate_crop_resample_diff(
+                #     acc, crop_min=0.5, crop_max=1.0
+                # )
                 pca = processing.pca_transform_3_handedness(acc)             
                 pca = processing.align_to_first_movement(pca)             
-
-                # crop AUGMENTATION
-                pca = processing.integrate_crop_resample_diff(
-                    pca, crop_min=0.5, crop_max=1.0
-                )
-                # print(pca.shape)
-
-                # random:
-                # pca = pca[torch.randperm(3), :]
+                # # crop AUGMENTATION
+                # pca = processing.integrate_crop_resample_diff(
+                #     pca, crop_min=0.5, crop_max=1.0
+                # )
                 return pca, self.labels[idx]
+                # return acc, self.labels[idx]
             case _:
                 raise NotImplementedError()
 

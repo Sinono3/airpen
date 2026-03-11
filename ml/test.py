@@ -18,34 +18,37 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def test(model, loader, device, num_classes: int, run: Optional[Run] = None):
-    """Test the model and return detailed metrics"""
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+def test(model, loader, device, num_classes: int, run: Optional[Run] = None, plot_cm: bool = True):
+    """Test the model and return detailed metrics, optionally plot confusion matrix"""
     model.eval()
     correct = 0
     total = 0
     all_preds = []
     all_labels = []
-    
+
     with torch.no_grad():
         for x, y in tqdm(loader, desc="Testing", leave=False):
-            x = x.to(device)  # (B, 3, 132)
+            x = x.to(device)
             y = y.to(device)
-            
+
             outputs = model(x)
             _, predicted = outputs.max(1)
-            
+
             correct += predicted.eq(y).sum().item()
             total += y.size(0)
-            
+
             all_preds.extend(predicted.cpu().numpy())
             all_labels.extend(y.cpu().numpy())
-    
+
     accuracy = 100. * correct / total
-    
-    # Compute per-class accuracy
+
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
-    
+
     logger.info("%s", "=" * 60)
     logger.info("TEST RESULTS")
     logger.info("%s", "=" * 60)
@@ -62,6 +65,16 @@ def test(model, loader, device, num_classes: int, run: Optional[Run] = None):
 
     if run is not None:
         run.track(accuracy, name="accuracy", context={"phase": "test"})
+
+    # Confusion matrix
+    if plot_cm:
+        cm = confusion_matrix(all_labels, all_preds)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        plt.xlabel("Predicted")
+        plt.ylabel("Actual")
+        plt.title("Confusion Matrix")
+        plt.show()
 
     logger.info("%s", "=" * 60)
     return accuracy, all_preds, all_labels
